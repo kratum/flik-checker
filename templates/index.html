@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>FLIK Checker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>FLIK Checker</h1>
+        <div class="form-container">
+            <form id="flikForm" onsubmit="event.preventDefault(); checkFLIK();">
+                <div class="form-group">
+                    <label for="flik">FLIK:</label>
+                    <input type="text" id="flik" name="flik" required>
+                </div>
+                <button type="submit">Check FLIK</button>
+            </form>
+            <div id="result" class="result-container"></div>
+            <div id="loading" class="loading" style="display: none;">Checking...</div>
+        </div>
+    </div>
+
+    <script>
+        async function checkFLIK() {
+            const flik = document.getElementById('flik').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            resultDiv.textContent = '';
+            loadingDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/check_flik', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ flik: flik })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.textContent = data.result ? 'FLIK is available' : 'FLIK is not available';
+                    resultDiv.className = 'result-container ' + (data.result ? 'success' : 'error');
+                } else {
+                    resultDiv.textContent = 'Error: ' + data.error;
+                    resultDiv.className = 'result-container error';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error checking FLIK: ' + error.message;
+                resultDiv.className = 'result-container error';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
