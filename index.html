@@ -256,7 +256,7 @@
 
             try {
                 // Create WFS request URL for MultiSurface
-                const wfsUrl = new URL('http://www.wfs.nrw.de/umwelt/lwk_eufoerderung');
+                const wfsUrl = new URL('https://www.wfs.nrw.de/umwelt/lwk_eufoerderung');
                 wfsUrl.searchParams.append('service', 'WFS');
                 wfsUrl.searchParams.append('version', '1.1.0');
                 wfsUrl.searchParams.append('request', 'GetFeature');
