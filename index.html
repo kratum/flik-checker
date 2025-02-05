@@ -132,7 +132,7 @@
                 const xmlDoc = parser.parseFromString(text, 'text/xml');
                 const features = xmlDoc.getElementsByTagName('gml:featureMember');
                 
-                resultDiv.textContent = features.length > 0 ? 'FLIK is available' : 'FLIK is not available';
+                resultDiv.textContent = features.length > 0 ? 'FLIK ist in nitratbelastetem Gebiet' : 'FLIK ist nicht in nitratbelastetem Gebiet';
                 resultDiv.className = features.length > 0 ? 'success' : 'error';
                 
             } catch (error) {
