@@ -1,17 +1,20 @@
 # FLIK Checker
 
-A web application to check FLIK (Feldblock-Identifikator) availability using the WFS service from NRW.
+A simple web application to check FLIK (Feldblock-Identifikator) availability using the WFS service from NRW.
 
-## Features
+## Usage
 
-- Check FLIK availability through a simple web interface
-- Real-time validation using WFS service
-- Responsive design
-- Error handling and user feedback
+1. Visit the GitHub Pages site at: https://kratum.github.io/flik-checker
+2. Enter a FLIK number in the input field
+3. Click "Check FLIK" to see the result
 
-## Setup
+## Development
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/flik-checker.git
-cd flik-checker
+This application is a single HTML file that runs entirely in the browser. It uses:
+- Vanilla JavaScript for functionality
+- Built-in fetch API for making requests
+- CORS proxy to handle cross-origin requests
+
+## Note
+
+The application uses a CORS proxy to handle cross-origin requests. For production use, you may want to set up your own proxy server or obtain proper CORS permissions from the WFS service provider.
