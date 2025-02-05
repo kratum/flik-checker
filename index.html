@@ -86,14 +86,21 @@
         <p>Prüft, ob ein Feldblock in einem nitratbelasteten Gebiet liegt (§13a Düngeverordnung). Dafür wird der Layer elwas_duengeverordnung_wfs:nitratbelastete_gebiete_feldbloecke des Dienstes https://www.wms.nrw.de/wms/elwas-duengeverordnung? angefragt. 
 </p>
         <div class="form-container">
-            <input type="text" id="flik" placeholder="Enter FLIK number" required>
+            <input type="text" id="flik" placeholder="Enter FLIK number (Format: DENWLI + 10 digits)" required>
             <button onclick="checkFLIK()">Check FLIK</button>
+            <div class="info">Example format: DENWLI0123456789</div>
             <div id="loading">Checking...</div>
             <div id="result"></div>
         </div>
     </div>
 
     <script>
+        function isValidFLIK(flik) {
+            // Check if the FLIK matches the pattern: DENWLI followed by exactly 10 digits
+            const flikPattern = /^DENWLI\d{10}$/;
+            return flikPattern.test(flik);
+        }
+        
         async function checkFLIK() {
             const flik = document.getElementById('flik').value;
             const resultDiv = document.getElementById('result');
@@ -105,6 +112,13 @@
                 return;
             }
 
+            // Validate FLIK format
+            if (!isValidFLIK(flik)) {
+                resultDiv.textContent = 'Not a correct FLIK or not in NRW';
+                resultDiv.className = 'error';
+                return;
+            }
+            
             loadingDiv.style.display = 'block';
             resultDiv.textContent = '';
             resultDiv.className = '';
@@ -119,8 +133,6 @@
                 wfsUrl.searchParams.append('filter', 
                     `<Filter><PropertyIsEqualTo><PropertyName>FLIK</PropertyName><Literal>${flik}</Literal></PropertyIsEqualTo></Filter>`);
 
-                // Use fetch with CORS proxy
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
                 const response = await fetch(wfsUrl.toString());
                 
                 if (!response.ok) {
