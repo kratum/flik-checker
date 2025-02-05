@@ -133,7 +133,7 @@
                 const features = xmlDoc.getElementsByTagName('gml:featureMember');
                 
                 resultDiv.textContent = features.length > 0 ? 'FLIK ist in nitratbelastetem Gebiet' : 'FLIK ist nicht in nitratbelastetem Gebiet';
-                resultDiv.className = features.length > 0 ? 'success' : 'error';
+                resultDiv.className = features.length > 0 ? 'error' : 'success';
                 
             } catch (error) {
                 resultDiv.textContent = 'Error checking FLIK: ' + error.message;
