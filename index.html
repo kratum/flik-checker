@@ -83,11 +83,13 @@
 <body>
     <div class="container">
         <h1>FLIK Checker</h1>
-        <p>Prüft, ob ein Feldblock in einem nitratbelasteten Gebiet liegt (§13a Düngeverordnung). Dafür wird der Layer elwas_duengeverordnung_wfs:nitratbelastete_gebiete_feldbloecke des Dienstes https://www.wms.nrw.de/wms/elwas-duengeverordnung? angefragt. 
+        <p>Prüft, ob ein Feldblock in einem nitratbelasteten Gebiet liegt (§13a Düngeverordnung). Dafür wird der Layer elwas_duengeverordnung_wfs:nitratbelastete_gebiete_feldbloecke des Dienstes h[...]
 </p>
         <div class="form-container">
             <input type="text" id="flik" placeholder="Enter FLIK number (Format: DENWLI0123456789)" required>
             <button onclick="checkFLIK()">Check FLIK</button>
+            <button onclick="getMultiSurface()">Get MultiSurface</button>
+            <button onclick="checkIntersection()">Check Intersection</button>
             <div id="loading">Checking...</div>
             <div id="result"></div>
         </div>
@@ -150,6 +152,185 @@
                 
             } catch (error) {
                 resultDiv.textContent = 'Error checking FLIK: ' + error.message;
+                resultDiv.className = 'error';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        async function getMultiSurface() {
+            const flik = document.getElementById('flik').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+
+            if (!flik) {
+                resultDiv.textContent = 'Please enter a FLIK number';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            // Validate FLIK format
+            if (!isValidFLIK(flik)) {
+                resultDiv.textContent = 'Not a correct FLIK or not in NRW';
+                resultDiv.className = 'error';
+                return;
+            }
+            
+            loadingDiv.style.display = 'block';
+            resultDiv.textContent = '';
+            resultDiv.className = '';
+
+            try {
+                // Create WFS request URL
+                const wfsUrl = new URL('http://www.wfs.nrw.de/umwelt/lwk_eufoerderung');
+                wfsUrl.searchParams.append('service', 'WFS');
+                wfsUrl.searchParams.append('version', '1.1.0');
+                wfsUrl.searchParams.append('request', 'GetFeature');
+                wfsUrl.searchParams.append('typename', 'umwelt_lwk_eufoerderung:Feldbloecke_in_NRW');
+                wfsUrl.searchParams.append('filter', 
+                    `<Filter><PropertyIsEqualTo><PropertyName>FLIK</PropertyName><Literal>${flik}</Literal></PropertyIsEqualTo></Filter>`);
+
+                const response = await fetch(wfsUrl.toString());
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const text = await response.text();
+                
+                // Parse XML response
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, 'text/xml');
+                const features = xmlDoc.getElementsByTagName('gml:featureMember');
+                
+                if (features.length > 0) {
+                    const multiSurface = features[0].getElementsByTagName('gml:MultiSurface')[0];
+                    const coordinates = multiSurface.getElementsByTagName('gml:posList')[0].textContent.trim().split(/\s+/);
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+                    for (let i = 0; i < coordinates.length; i += 2) {
+                        const x = parseFloat(coordinates[i]);
+                        const y = parseFloat(coordinates[i + 1]);
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+
+                    resultDiv.textContent = `MultiSurface found with extent: ${minX},${minY} to ${maxX},${maxY}`;
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = 'No MultiSurface found for this FLIK';
+                    resultDiv.className = 'error';
+                }
+                
+            } catch (error) {
+                resultDiv.textContent = 'Error fetching MultiSurface: ' + error.message;
+                resultDiv.className = 'error';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        async function checkIntersection() {
+            const flik = document.getElementById('flik').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+
+            if (!flik) {
+                resultDiv.textContent = 'Please enter a FLIK number';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            // Validate FLIK format
+            if (!isValidFLIK(flik)) {
+                resultDiv.textContent = 'Not a correct FLIK or not in NRW';
+                resultDiv.className = 'error';
+                return;
+            }
+            
+            loadingDiv.style.display = 'block';
+            resultDiv.textContent = '';
+            resultDiv.className = '';
+
+            try {
+                // Create WFS request URL for MultiSurface
+                const wfsUrl = new URL('http://www.wfs.nrw.de/umwelt/lwk_eufoerderung');
+                wfsUrl.searchParams.append('service', 'WFS');
+                wfsUrl.searchParams.append('version', '1.1.0');
+                wfsUrl.searchParams.append('request', 'GetFeature');
+                wfsUrl.searchParams.append('typename', 'umwelt_lwk_eufoerderung:Feldbloecke_in_NRW');
+                wfsUrl.searchParams.append('filter', 
+                    `<Filter><PropertyIsEqualTo><PropertyName>FLIK</PropertyName><Literal>${flik}</Literal></PropertyIsEqualTo></Filter>`);
+
+                const response = await fetch(wfsUrl.toString());
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const text = await response.text();
+                
+                // Parse XML response
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, 'text/xml');
+                const features = xmlDoc.getElementsByTagName('gml:featureMember');
+                
+                if (features.length > 0) {
+                    const multiSurface = features[0].getElementsByTagName('gml:MultiSurface')[0];
+                    const coordinates = multiSurface.getElementsByTagName('gml:posList')[0].textContent.trim().split(/\s+/);
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+                    for (let i = 0; i < coordinates.length; i += 2) {
+                        const x = parseFloat(coordinates[i]);
+                        const y = parseFloat(coordinates[i + 1]);
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+
+                    // Create WFS request URL for the second server with EPSG:25832
+                    const wfsUrl2 = new URL('https://www.wfs.nrw.de/umwelt/lwk_eufoerderung');
+                    wfsUrl2.searchParams.append('service', 'WFS');
+                    wfsUrl2.searchParams.append('version', '1.1.0');
+                    wfsUrl2.searchParams.append('request', 'GetFeature');
+                    wfsUrl2.searchParams.append('typename', 'umwelt_lwk_eufoerderung:Wassererosionsgefaehrdete_Gebiete_in_NRW');
+                    wfsUrl2.searchParams.append('srsName', 'EPSG:25832');
+                    wfsUrl2.searchParams.append('bbox', `${minX},${minY},${maxX},${maxY},EPSG:25832`);
+
+                    const response2 = await fetch(wfsUrl2.toString());
+
+                    if (!response2.ok) {
+                        throw new Error(`HTTP error! status: ${response2.status}`);
+                    }
+
+                    const text2 = await response2.text();
+
+                    // Parse XML response from the second WFS server
+                    const xmlDoc2 = parser.parseFromString(text2, 'text/xml');
+                    const features2 = xmlDoc2.getElementsByTagName('gml:featureMember');
+
+                    // Check for intersection
+                    let intersects = false;
+                    for (let i = 0; i < features2.length; i++) {
+                        const geometry = features2[i].getElementsByTagName('gml:MultiSurface')[0];
+                        if (geometry) {
+                            intersects = true;
+                            break;
+                        }
+                    }
+
+                    resultDiv.textContent = intersects ? 'MultiSurface intersects with water erosion areas' : 'No intersection found with water erosion areas';
+                    resultDiv.className = intersects ? 'success' : 'error';
+                } else {
+                    resultDiv.textContent = 'No MultiSurface found for this FLIK';
+                    resultDiv.className = 'error';
+                }
+                
+            } catch (error) {
+                resultDiv.textContent = 'Error checking intersection: ' + error.message;
                 resultDiv.className = 'error';
             } finally {
                 loadingDiv.style.display = 'none';
