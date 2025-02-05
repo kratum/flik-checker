@@ -1,6 +1,10 @@
 # FLIK Checker
 
-A simple web application to check FLIK (Feldblock-Identifikator) availability using the WFS service from NRW.
+A simple web application to check if a FLIK (Feldblock-Identifikator) is "innerhalb der mit Nitrat belasteten Gebiete nach § 13a DüV (01/2025)". For this task the following WFS-Service of LANUV is used: 
+
+url='https://www.wfs.nrw.de/umwelt/elwas-duengeverordnung_wfs'
+typename='elwas_duengeverordnung_wfs:nitratbelastete_gebiete_feldbloecke'
+
 
 ## Usage
 
